@@ -1,34 +1,51 @@
 # Ledger — a calm to‑do list
 
-A modern, responsive to-do list app. No build step, no external runtime dependencies, no backend — everything is saved to your browser's Local Storage.
+Ledger is a modern, responsive to-do list app built with plain HTML, CSS, and JavaScript. It offers a calm, minimalist experience for managing daily tasks without any build step or backend setup.
+
+## What it does
+
+You can create and organize tasks with:
+- titles and descriptions
+- due dates
+- priority levels
+- categories
+- completion status
+- pinning and reordering
+
+The app also includes search, filters, statistics, undo support, and theme customization.
 
 ## Run it
 
-**Option A — just open it**
-Double-click `index.html` (or open it via File → Open in your browser).
+### Option A — open directly
+Open [index.html](index.html) in your browser.
 
-**Option B — with a local server**
-```
+### Option B — run with a local server
+```bash
 npm install
 npm start
 ```
-Then visit http://localhost:3000. (`npm install` is a no-op here since there are no dependencies — the server is plain Node.js.)
+Then visit http://localhost:3000.
 
 ## Features
 
-- Add, edit, delete, and complete tasks with title, description, due date, priority, and category
-- Search, filter (status / priority / category / due today / overdue), and sort (manual drag order, due date, created date, alphabetical, priority)
-- Statistics dashboard with a live completion progress bar
-- Pin important tasks, duplicate tasks, drag-and-drop reordering
-- Undo for deletes, confirmation prompts for destructive bulk actions
-- Toast notifications, keyboard support (Enter to add, Escape to cancel editing)
-- Dark/light mode and three accent color themes, all remembered between visits
-- Import/export your tasks as a JSON file
-- Fully responsive, keyboard-accessible, and works offline
+- Add, edit, delete, and complete tasks
+- Search and filter by status, priority, category, and due date
+- Sort tasks manually or by date, alphabet, or priority
+- View progress statistics and overdue counts
+- Pin important tasks and duplicate existing ones
+- Export your current task list as a PDF
+- Save everything locally in the browser using Local Storage
+- Use dark mode and accent themes
 
-## Files
+## Project files
 
-- `index.html` — markup and structure
-- `style.css` — all styling, theming, and animation
-- `app.js` — application logic and Local Storage persistence
-- `server.js` / `package.json` — optional zero-dependency static server for `npm start`
+- [index.html](index.html) — app structure and UI
+- [style.css](style.css) — styling, layout, and themes
+- [app.js](app.js) — app logic, task management, and export behavior
+- [server.js](server.js) — simple local server for running the app
+- [package.json](package.json) — npm start script
+
+## Notes
+
+- Tasks are stored in your browser, so they remain available on the same device/browser.
+- The export feature creates a PDF version of the current task list.
