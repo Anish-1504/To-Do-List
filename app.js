@@ -152,6 +152,73 @@
     };
   }
 
+  function escapePdfText(input) {
+    return String(input)
+      .replace(/\\/g, "\\\\")
+      .replace(/\(/g, "\\(")
+      .replace(/\)/g, "\\)")
+      .replace(/\r/g, "")
+      .replace(/\n/g, " ");
+  }
+
+  function sanitizeText(input) {
+    return String(input).replace(/[^\x20-\x7E]/g, "?");
+  }
+
+  function buildPdfBlob(tasksToExport) {
+    const lines = [];
+    lines.push("Ledger Tasks Export");
+    lines.push(`Generated: ${new Date().toLocaleString()}`);
+    lines.push("");
+
+    tasksToExport.forEach((task, index) => {
+      lines.push(`${index + 1}. ${sanitizeText(task.title || "(Untitled)")}`);
+      if (task.description) {
+        lines.push(`   ${sanitizeText(task.description)}`);
+      }
+      lines.push(`   Priority: ${sanitizeText(task.priority || "medium")}`);
+      lines.push(`   Status: ${task.completed ? "Completed" : "Active"}`);
+      if (task.dueDate) lines.push(`   Due: ${sanitizeText(task.dueDate)}`);
+      if (task.category) lines.push(`   Category: ${sanitizeText(task.category)}`);
+      lines.push("");
+    });
+
+    const contentStream = lines
+      .map((line, index) => `BT /F1 12 Tf 50 ${760 - index * 14} Td (${escapePdfText(line)}) Tj ET`)
+      .join("\n");
+    const streamLength = new TextEncoder().encode(contentStream).length;
+
+    const objectBodies = [];
+    const addObject = (body) => {
+      const objectNumber = objectBodies.length + 1;
+      objectBodies.push(`${objectNumber} 0 obj\n${body}\nendobj\n`);
+      return objectNumber;
+    };
+
+    addObject("<< /Type /Catalog /Pages 2 0 R >>");
+    addObject("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+    addObject("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>");
+    addObject(`<< /Length ${streamLength} >>\nstream\n${contentStream}\nendstream`);
+    addObject("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+
+    let pdfContent = "%PDF-1.4\n";
+    const offsets = [];
+    objectBodies.forEach((body) => {
+      offsets.push(pdfContent.length);
+      pdfContent += body;
+    });
+
+    const xrefOffset = pdfContent.length;
+    pdfContent += `xref\n0 ${objectBodies.length + 1}\n`;
+    pdfContent += "0000000000 65535 f \n";
+    offsets.forEach((offset) => {
+      pdfContent += `${String(offset).padStart(10, "0")} 00000 n \n`;
+    });
+    pdfContent += `trailer\n<< /Size ${objectBodies.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+    return new Blob([pdfContent], { type: "application/pdf" });
+  }
+
   /* ============================== persistence =============================== */
   function loadTasks() {
     try {
@@ -810,16 +877,16 @@
       showToast("There's nothing to export yet.");
       return;
     }
-    const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: "application/json" });
+    const blob = buildPdfBlob(tasks);
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ledger-tasks-${todayISO()}.json`;
+    a.download = `ledger-tasks-${todayISO()}.pdf`;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    showToast("Tasks exported.");
+    showToast("Tasks exported as PDF.");
   });
 
   el.importBtn.addEventListener("click", () => el.importInput.click());
